@@ -51,6 +51,9 @@ def probe(base_url):
         body = e.read(2000).decode("utf-8", "replace")
         if e.code == 401 and ("unauthenticated" in body or "errors" in body):
             return "Canvas found"
+        if e.code >= 500 or e.code in (403, 429):
+            # down, rate-limited or behind a firewall page: not proof of a typo
+            return "could not confirm it is Canvas: the server answered HTTP %s; saved anyway" % e.code
         raise CanvasError("%s does not look like Canvas (HTTP %s)" % (base_url, e.code))
     except urllib.error.URLError as e:
         raise CanvasError("could not reach %s: %s" % (base_url, e.reason))

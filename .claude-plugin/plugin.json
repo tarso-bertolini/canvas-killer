@@ -1,14 +1,21 @@
 {
   "name": "canvas-killer",
   "displayName": "Canvas Killer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Pull every open Canvas assignment, rank what needs you first, and work through it with Claude. You review and approve every submission.",
   "author": {
     "name": "Tarso Bertolini",
     "url": "https://github.com/tarso-bertolini"
   },
   "repository": "https://github.com/tarso-bertolini/canvas-killer",
-  "keywords": ["canvas", "instructure", "lms", "students", "assignments", "deadlines"],
+  "keywords": [
+    "canvas",
+    "instructure",
+    "lms",
+    "students",
+    "assignments",
+    "deadlines"
+  ],
   "userConfig": {
     "canvas_url": {
       "type": "string",

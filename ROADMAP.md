@@ -40,6 +40,9 @@ module material and syllabus found for a one-line assignment.
 - [ ] Text-entry and URL submissions (`online_text_entry`, `online_url`)
 
 ## 5. Release
+- [x] Install tested from the GitHub marketplace in a clean Claude Code configuration
+- [x] Launcher works on Windows (Git Bash) as well as macOS and Linux; CI on all three
+- [x] Setup tolerates a Canvas that is down or behind a firewall page
 - [ ] Choose a license
 - [ ] Test on a second institution (custom domain)
 - [ ] Make the repository public; submit to Anthropic's plugin directory
