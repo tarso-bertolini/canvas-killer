@@ -113,3 +113,7 @@ The repository is the plugin: `.claude-plugin/plugin.json`, the marketplace entr
 `.claude-plugin/marketplace.json`, and the skill in `skills/canvas-killer/` (`SKILL.md`,
 `references/recipes.md`, and the `ck` command in `scripts/`). CI runs the tests on macOS, Linux
 and Windows. See [ROADMAP.md](ROADMAP.md).
+
+## License
+
+[MIT](LICENSE). canvas-killer is an independent project, not affiliated with Instructure or any school.

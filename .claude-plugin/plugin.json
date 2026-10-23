@@ -22,5 +22,6 @@
       "title": "Canvas address",
       "description": "Your school's Canvas: the name before .instructure.com (e.g. pucpr) or the full address if your school uses its own domain (e.g. https://canvas.school.edu)"
     }
-  }
+  },
+  "license": "MIT"
 }
