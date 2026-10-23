@@ -10,6 +10,8 @@
     ck rank [--json] [--all]    show the ranking from the last sync
     ck show <n|course:id>       instructions, attachments and details of one task
     ck fetch <n|course:id>      save instructions and attached files to the task's folder
+    ck submit <n|course:id> <files...> [--confirm]
+                                preview a file submission; --confirm sends it
 """
 
 import argparse
@@ -309,6 +311,67 @@ def cmd_fetch(args):
         print("  external link, not downloaded: %s" % u)
 
 
+def cmd_submit(args):
+    """Upload files as the student's submission, in two deliberate steps.
+
+    Without --confirm it only checks the live assignment and prints exactly
+    what would be sent where. With --confirm, given only after the student
+    approved that exact preview, it uploads, submits and reads the result back.
+    """
+    cfg = config.load_config()
+    canvas = _canvas(cfg)
+    task = _find(_load_cache(), args.task)
+    base = "/api/v1/courses/%s/assignments/%s" % (task["course_id"], task["assignment_id"])
+    a = canvas.get(base, {"include[]": ["submission"]})
+    files = [Path(f).expanduser().resolve() for f in args.files]
+    now = datetime.now(timezone.utc)
+    sub = a.get("submission") or {}
+    due = tasks.parse_time(a.get("due_at"))
+    limit = a.get("allowed_attempts") or -1
+
+    print("Submission preview")
+    print("  Course:      %s" % task["course_name"])
+    print("  Assignment:  %s" % a.get("name"))
+    print("  Due:         %s (%s)" % (due.astimezone().strftime("%Y-%m-%d %H:%M") if due else "-",
+                                      tasks.humanize_due(a.get("due_at"), now)))
+    for f in files:
+        size = ("%.1f MB" % (f.stat().st_size / 1e6)) if f.is_file() else "missing"
+        print("  File:        %s (%s)" % (f, size))
+    print("  Status now:  %s%s" % (sub.get("workflow_state") or "unsubmitted",
+                                   (", submitted %s" % sub["submitted_at"]) if sub.get("submitted_at") else ""))
+    print("  Attempts:    %s" % ("unlimited" if limit <= 0 else "%d of %d used" % (sub.get("attempt") or 0, limit)))
+    if a.get("group_category_id"):
+        print("  Group work:  this submission counts for the whole group")
+    problems = tasks.submission_problems(a, files, now)
+    if problems:
+        print("\nCannot submit:")
+        for p in problems:
+            print("  - " + p)
+        sys.exit(1)
+    if not args.confirm:
+        print("\nNothing was sent. Run again with --confirm once the student approves this exact submission.")
+        return
+
+    file_ids = []
+    for f in files:
+        ticket = canvas.post(base + "/submissions/self/files",
+                             [("name", f.name), ("size", f.stat().st_size), ("content_type", "application/octet-stream")])
+        uploaded = canvas.upload(ticket["upload_url"], ticket.get("upload_params") or {}, str(f))
+        file_ids.append(uploaded["id"])
+        print("Uploaded %s (Canvas file %s)" % (f.name, uploaded["id"]))
+    fields = [("submission[submission_type]", "online_upload")] + [("submission[file_ids][]", i) for i in file_ids]
+    if args.comment:
+        fields.append(("comment[text_comment]", args.comment))
+    canvas.post(base + "/submissions", fields)
+    check = canvas.get(base + "/submissions/self")
+    names = [att.get("display_name") for att in check.get("attachments") or []]
+    print("Canvas now shows: %s, submitted %s, attempt %s, files: %s"
+          % (check.get("workflow_state"), check.get("submitted_at"), check.get("attempt"), ", ".join(names) or "-"))
+    if check.get("workflow_state") not in tasks.DONE_STATES:
+        print("ck: Canvas did not register the submission; check it in the browser: %s" % task["url"], file=sys.stderr)
+        sys.exit(1)
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(prog="ck", description="Rank and work your Canvas tasks.")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -336,6 +399,12 @@ def main(argv=None):
     s.add_argument("--json", action="store_true")
     s = sub.add_parser("fetch", help="save a task's instructions and attached files to its folder")
     s.add_argument("task", help="rank number from `ck rank`, or course_id:assignment_id")
+    s = sub.add_parser("submit", help="preview, then (with --confirm) upload files as the submission")
+    s.add_argument("task", help="rank number from `ck rank`, or course_id:assignment_id")
+    s.add_argument("files", nargs="+", help="files to upload")
+    s.add_argument("--confirm", action="store_true",
+                   help="really submit; only after the student approved this exact preview")
+    s.add_argument("--comment", help="optional comment sent with the submission")
     args = p.parse_args(argv)
     try:
         globals()["cmd_" + args.cmd.replace("-", "_")](args)

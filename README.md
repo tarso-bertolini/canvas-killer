@@ -41,6 +41,8 @@ Under the hood it runs the `ck` command line:
 | `ck rank [--json] [--all]` | Shows the last ranking |
 | `ck show 3` | Details and instructions of task #3 |
 | `ck fetch 3` | Saves task #3's instructions, its attached files, the lecture material posted with it in the course module, and the course syllabus |
+| `ck submit 3 file.zip` | Previews the submission of task #3 against the live assignment; nothing is sent |
+| `ck submit 3 file.zip --confirm` | Submits it, only after you approved that preview, and reads the result back from Canvas |
 | `ck setup --ignore "Course name"` | Leaves a course out of the ranking (matches your nickname or the official name) |
 | `ck status` / `ck logout` | Who is signed in / forget the session |
 

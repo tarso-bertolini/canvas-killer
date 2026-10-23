@@ -102,6 +102,39 @@ def normalize(course, a, now):
     }
 
 
+def submission_problems(a, files, now):
+    """Reasons Canvas would reject this upload, or canvas-killer won't send it.
+
+    `a` is the live assignment (with include[]=submission) and `files` are Paths.
+    An empty list means the submission can go ahead once the student approves it.
+    """
+    problems = []
+    label, reason = classify(a)
+    if label == LOCKED:
+        problems.append("Canvas has it locked: %s" % reason)
+    elif label == HUMAN and ("quiz" in reason or "exam" in reason):
+        problems.append("canvas-killer does not submit quizzes or exams (%s)" % reason)
+    lock_at = parse_time(a.get("lock_at"))
+    if lock_at and lock_at < now:
+        problems.append("closed for submissions since %s" % lock_at.astimezone().strftime("%Y-%m-%d %H:%M"))
+    types = a.get("submission_types") or []
+    if "online_upload" not in types:
+        problems.append("this assignment does not take file uploads (it takes: %s)" % (", ".join(types) or "nothing"))
+    allowed = [e.lower().lstrip(".") for e in (a.get("allowed_extensions") or [])]
+    for f in files:
+        if not f.is_file():
+            problems.append("%s: file not found" % f)
+        elif allowed and f.suffix.lower().lstrip(".") not in allowed:
+            problems.append("%s: Canvas only accepts %s" % (f.name, ", ".join(allowed)))
+    if not files:
+        problems.append("no file to submit")
+    sub = a.get("submission") or {}
+    limit = a.get("allowed_attempts") or -1
+    if limit > 0 and (sub.get("attempt") or 0) >= limit:
+        problems.append("no attempts left (%d of %d used)" % (sub.get("attempt") or 0, limit))
+    return problems
+
+
 def score(task, now, max_points):
     """Higher is more pressing: urgency of the deadline times the weight of the grade.
 

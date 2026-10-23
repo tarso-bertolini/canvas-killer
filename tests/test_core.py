@@ -78,6 +78,33 @@ class OpenTasks(unittest.TestCase):
         self.assertTrue(tasks.is_open(assignment(due_at=iso(-5), lock_at=iso(24)), NOW))
 
 
+class SubmissionChecks(unittest.TestCase):
+    def setUp(self):
+        import tempfile
+        self.dir = Path(tempfile.mkdtemp())
+        self.zip = self.dir / "entrega.zip"
+        self.zip.write_bytes(b"PK")
+
+    def problems(self, files=None, **kw):
+        a = assignment(allowed_extensions=["zip"], **kw)
+        return tasks.submission_problems(a, [self.zip] if files is None else files, NOW)
+
+    def test_clean_upload_passes(self):
+        self.assertEqual(self.problems(), [])
+
+    def test_blocks(self):
+        self.assertTrue(self.problems(files=[self.dir / "x.pdf"]))                  # missing file
+        pdf = self.dir / "r.pdf"
+        pdf.write_bytes(b"%PDF")
+        self.assertIn("only accepts zip", self.problems(files=[pdf])[0])
+        self.assertTrue(self.problems(lock_at=iso(-1)))                              # closed
+        self.assertTrue(self.problems(locked_for_user=True))
+        self.assertTrue(self.problems(submission_types=["online_text_entry"]))
+        self.assertTrue(self.problems(allowed_attempts=1, submission={"attempt": 1}))
+        self.assertIn("quizzes or exams", self.problems(name="Prova 2")[0])
+        self.assertEqual(self.problems(files=[]), ["no file to submit"])
+
+
 class Ranking(unittest.TestCase):
     def ranked(self, *assignments):
         ts = [tasks.normalize(COURSE, dict(a, id=i), NOW) for i, a in enumerate(assignments, 1)]

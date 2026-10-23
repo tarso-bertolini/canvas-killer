@@ -32,9 +32,12 @@ module material and syllabus found for a one-line assignment.
 - [ ] Per-course memory: lessons learned from earlier tasks of the same course
 
 ## 4. Submit, with confirmation
-- [ ] `ck submit <task> <files>`: shows exactly what goes where, requires an explicit
-      per-submission confirmation, uploads through the Canvas API, verifies the submission
-- [ ] Respect allowed extensions, attempts left, group submissions
+- [x] `ck submit <task> <files>`: previews exactly what goes where; `--confirm` (only after
+      the student's yes for that preview) uploads through the Canvas API and reads it back
+- [x] Respects allowed extensions, lock dates, attempts left; flags group submissions;
+      refuses quizzes and exams
+- [x] First real submission: Animação Fisheye - POVRAY (PUCPR), file verified byte for byte
+- [ ] Text-entry and URL submissions (`online_text_entry`, `online_url`)
 
 ## 5. Release
 - [ ] Choose a license
