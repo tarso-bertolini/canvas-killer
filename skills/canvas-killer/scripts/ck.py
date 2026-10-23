@@ -17,6 +17,7 @@
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timedelta, timezone
@@ -163,10 +164,25 @@ def _find(cache, ref):
     raise config.ConfigError("no task %r in the last sync (use the # from `ck rank` or course:assignment)" % ref)
 
 
+def _task(canvas, ref):
+    """A task from the last sync or, given as course_id:assignment_id, straight from
+    Canvas: submitted work drops out of the sync but can still be resubmitted."""
+    try:
+        return _find(_load_cache(), ref)
+    except config.ConfigError:
+        m = re.fullmatch(r"(\d+):(\d+)", ref.strip())
+        if not m:
+            raise
+        course = canvas.get("/api/v1/courses/%s" % m.group(1))
+        a = canvas.get("/api/v1/courses/%s/assignments/%s" % m.groups(), {"include[]": ["submission"]})
+        return tasks.normalize(course, a, datetime.now(timezone.utc))
+
+
 def cmd_show(args):
     cfg = config.load_config()
-    task = _find(_load_cache(), args.task)
-    a = _canvas(cfg).get("/api/v1/courses/%s/assignments/%s" % (task["course_id"], task["assignment_id"]),
+    canvas = _canvas(cfg)
+    task = _task(canvas, args.task)
+    a = canvas.get("/api/v1/courses/%s/assignments/%s" % (task["course_id"], task["assignment_id"]),
                          {"include[]": ["submission"]})
     text, links = tasks.html_to_text(a.get("description"))
     if args.json:
@@ -238,7 +254,7 @@ def cmd_fetch(args):
     """
     cfg = config.load_config()
     canvas = _canvas(cfg)
-    task = _find(_load_cache(), args.task)
+    task = _task(canvas, args.task)
     cid = task["course_id"]
     a = canvas.get("/api/v1/courses/%s/assignments/%s" % (cid, task["assignment_id"]))
     text, links = tasks.html_to_text(a.get("description"))
@@ -320,7 +336,7 @@ def cmd_submit(args):
     """
     cfg = config.load_config()
     canvas = _canvas(cfg)
-    task = _find(_load_cache(), args.task)
+    task = _task(canvas, args.task)
     base = "/api/v1/courses/%s/assignments/%s" % (task["course_id"], task["assignment_id"])
     a = canvas.get(base, {"include[]": ["submission"]})
     files = [Path(f).expanduser().resolve() for f in args.files]
