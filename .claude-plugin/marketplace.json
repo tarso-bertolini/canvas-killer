@@ -1,0 +1,15 @@
+{
+  "name": "canvas-killer",
+  "description": "Canvas LMS automation for busy students",
+  "owner": {
+    "name": "Tarso Bertolini",
+    "url": "https://github.com/tarso-bertolini"
+  },
+  "plugins": [
+    {
+      "name": "canvas-killer",
+      "source": "./",
+      "description": "Pull every open Canvas assignment, rank what needs you first, and work through it with Claude."
+    }
+  ]
+}

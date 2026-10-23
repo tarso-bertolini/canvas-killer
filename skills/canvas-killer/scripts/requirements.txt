@@ -1,0 +1,2 @@
+# Only needed for the login window; the Canvas API client uses the standard library.
+playwright>=1.40

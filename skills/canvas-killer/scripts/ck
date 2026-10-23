@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# canvas-killer launcher: keeps a private Python environment under the
+# canvas-killer home (re-installed when requirements.txt changes) and runs ck.py in it.
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CK_HOME="${CANVAS_KILLER_HOME:-$HOME/.canvas-killer}"
+VENV="$CK_HOME/venv"
+STAMP="$VENV/.requirements"
+
+if [ ! -x "$VENV/bin/python" ] || ! cmp -s "$HERE/requirements.txt" "$STAMP"; then
+  PY="$(command -v python3 || true)"
+  if [ -z "$PY" ] || ! "$PY" -c 'import sys; sys.exit(sys.version_info < (3, 9))'; then
+    echo "canvas-killer needs Python 3.9 or newer (python3 not found or too old)" >&2
+    exit 1
+  fi
+  mkdir -p "$CK_HOME" && chmod 700 "$CK_HOME"
+  echo "Setting up the canvas-killer Python environment in $VENV ..." >&2
+  [ -x "$VENV/bin/python" ] || "$PY" -m venv "$VENV"
+  "$VENV/bin/pip" install --quiet --disable-pip-version-check -r "$HERE/requirements.txt" >&2
+  cp "$HERE/requirements.txt" "$STAMP"
+fi
+exec "$VENV/bin/python" "$HERE/ck.py" "$@"
