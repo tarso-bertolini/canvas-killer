@@ -40,6 +40,22 @@ class BaseUrl(unittest.TestCase):
                 config.normalize_base_url(bad)
 
 
+class AiDisclosure(unittest.TestCase):
+    def test_default_is_auto(self):
+        self.assertEqual(config.ai_disclosure({}), ("auto", None))
+        self.assertIn("only when", config.describe_ai_disclosure({}))
+
+    def test_modes_and_custom_text(self):
+        cfg = {"ai_disclosure": {"mode": "never"}}
+        self.assertEqual(config.ai_disclosure(cfg), ("never", None))
+        cfg = {"ai_disclosure": {"mode": "always", "text": "Feito com ajuda do Claude."}}
+        self.assertEqual(config.ai_disclosure(cfg), ("always", "Feito com ajuda do Claude."))
+        self.assertIn("custom text set", config.describe_ai_disclosure(cfg))
+
+    def test_unknown_mode_falls_back_to_auto(self):
+        self.assertEqual(config.ai_disclosure({"ai_disclosure": {"mode": "maybe"}})[0], "auto")
+
+
 class Classify(unittest.TestCase):
     def label(self, **kw):
         return tasks.classify(assignment(**kw))[0]

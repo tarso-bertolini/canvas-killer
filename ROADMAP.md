@@ -25,6 +25,7 @@ module material and syllabus found for a one-line assignment.
 - [ ] Let Claude refine `auto?` into `auto` / `you` after reading the materials, and cache why
 
 ## 3. Do the work
+- [x] AI-use disclosure setting (`auto`/`always`/`never`, optional custom text), honored by the skill
 - [ ] AI policy: extract the syllabus' AI rule and declaration template into the task notes,
       flag "instructor permission required" in the ranking
 - [ ] Workspace scaffold per task: `work/`, `deliverable/`, `NOTES.md` template

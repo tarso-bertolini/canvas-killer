@@ -1,7 +1,7 @@
 {
   "name": "canvas-killer",
   "displayName": "Canvas Killer",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Pull every open Canvas assignment, rank what needs you first, and work through it with Claude. You review and approve every submission.",
   "author": {
     "name": "Tarso Bertolini",

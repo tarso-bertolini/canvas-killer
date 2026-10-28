@@ -37,12 +37,18 @@ means not configured): `${user_config.canvas_url}`
    assumed, substituted or reconstructed, anything that could not be done, and what the
    student must check before submitting. Never present a guess as fact.
 6. **Group work:** remind the student that one member submits for the group.
-7. **Follow the institution's AI policy.** Before working a task, read the course syllabus that
-   `ck fetch` saves in `inputs/course/` (and any AI guidelines linked in the course) for rules on
-   AI use. Many schools require a declaration of AI use inside the work itself: include it,
-   using the exact template they give. If the policy says AI use needs the instructor's
-   explicit permission and the assignment doesn't grant it, tell the student before they
-   submit that they must ask first. Say this even when they asked you to do the task.
+7. **AI-use disclosure follows the student's setting**, shown by `ck status` and in each task's
+   `instructions.md`. Read the course syllabus that `ck fetch` saves in `inputs/course/` (and any
+   AI guidelines linked in the course) first, then:
+   - `auto` (default): if the course or school requires a declaration of AI use in the work,
+     include it with their exact template; if nothing requires one, don't add one.
+   - `always`: include a declaration in every deliverable: the school's template if there is
+     one, otherwise the student's own text (`--ai-disclosure-text`), otherwise a short neutral one.
+   - `never`: don't add one. If the syllabus requires a declaration, say so in one line of
+     `NOTES.md` and leave it to the student; don't repeat it elsewhere.
+
+   In every mode, if the policy says AI use needs the instructor's explicit permission and the
+   assignment doesn't grant it, mention that once before the student submits.
 
 ## Workflow
 
@@ -51,9 +57,12 @@ Run `ck status`. If it reports no setup, ask for (or take from the plugin config
 - the Canvas address: the name before `.instructure.com` (e.g. `pucpr`), or the full
   address if the school uses its own domain;
 - their name as it should appear on work, their group or class code, and how finished files
-  must be named (e.g. `{group}_FORMATIVA{n}`); all optional.
+  must be named (e.g. `{group}_FORMATIVA{n}`); all optional;
+- whether deliverables should declare AI use: `auto` (only when the course requires it, the
+  default), `always` or `never` (rule 7).
 
-Then `ck setup --url <address> [--name ..] [--group ..] [--naming ..] [--workspace ..]`.
+Then `ck setup --url <address> [--name ..] [--group ..] [--naming ..] [--workspace ..]
+[--ai-disclosure auto|always|never] [--ai-disclosure-text ".."]`.
 It checks that the address really is Canvas. Courses the student doesn't care about (optional
 support courses, old enrollments) are left out with `ck setup --ignore "<part of the name>"`.
 

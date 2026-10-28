@@ -53,11 +53,20 @@ def cmd_setup(args):
         cfg.setdefault("ignore_courses", [])
         if name not in cfg["ignore_courses"]:
             cfg["ignore_courses"].append(name)
+    disclosure = cfg.setdefault("ai_disclosure", {"mode": config.DEFAULT_AI_DISCLOSURE})
+    if args.ai_disclosure:
+        disclosure["mode"] = args.ai_disclosure
+    if args.ai_disclosure_text is not None:
+        if args.ai_disclosure_text.strip():
+            disclosure["text"] = args.ai_disclosure_text.strip()
+        else:
+            disclosure.pop("text", None)
     kind = api.probe(cfg["base_url"])
     config.save_config(cfg)
     print("Canvas address: %s (%s)" % (cfg["base_url"], kind))
     print("Profile:        %s" % json.dumps(profile, ensure_ascii=False))
     print("Deliverables:   %s" % cfg["workspace"])
+    print("AI disclosure:  %s" % config.describe_ai_disclosure(cfg))
     if cfg.get("ignore_courses"):
         print("Ignoring:       courses containing %s" % ", ".join(repr(c) for c in cfg["ignore_courses"]))
     print("Saved to %s. Next: `ck login`." % config.CONFIG_FILE)
@@ -83,6 +92,7 @@ def cmd_status(args):
     print("Canvas address: %s" % cfg["base_url"])
     print("Profile:        %s" % json.dumps(cfg["profile"], ensure_ascii=False))
     print("Deliverables:   %s" % cfg["workspace"])
+    print("AI disclosure:  %s" % config.describe_ai_disclosure(cfg))
     me = _canvas(cfg).get("/api/v1/users/self")
     print("Signed in as:   %s (Canvas user %s)" % (me.get("name"), me.get("id")))
     cache = config.load_json(config.CACHE_FILE)
@@ -309,7 +319,12 @@ def cmd_fetch(args):
                                      (" (extensions: %s)" % ", ".join(task["allowed_extensions"]))
                                      if task["allowed_extensions"] else ""),
              "- Group work: %s" % ("yes, one member submits" if task["group_work"] else "no"),
-             "- Canvas: %s" % task["url"], "",
+             "- Canvas: %s" % task["url"],
+             "- AI disclosure (student's setting): %s" % config.describe_ai_disclosure(cfg), ""]
+    custom = config.ai_disclosure(cfg)[1]
+    if custom:
+        lines += ["## Student's AI disclosure text", "", custom, ""]
+    lines += [
              "## Instructions (copied from Canvas)", "", text or "(no description)", ""]
     if module_lines:
         lines += ["## Posted with it in the course module", ""] + module_lines + [""]
@@ -400,6 +415,11 @@ def main(argv=None):
     s.add_argument("--ignore", action="append", metavar="COURSE",
                    help="leave out courses whose name contains this text (repeatable)")
     s.add_argument("--clear-ignore", action="store_true", help="stop ignoring any course")
+    s.add_argument("--ai-disclosure", choices=sorted(config.AI_DISCLOSURE_MODES),
+                   help="declare AI use in deliverables: auto (only when the course requires it, default), "
+                        "always, or never")
+    s.add_argument("--ai-disclosure-text", metavar="TEXT",
+                   help="your own declaration text, used when no course template applies (\"\" clears it)")
     sub.add_parser("install-browser", help="download Playwright's Chromium for the login window")
     s = sub.add_parser("login", help="sign in to Canvas in a browser window")
     s.add_argument("--timeout", type=int, default=10, help="minutes to wait for the login (default 10)")

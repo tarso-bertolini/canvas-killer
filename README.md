@@ -10,9 +10,10 @@ deliverable for you to review, and submits it once you say yes. Anything that ne
 
 > **You stay in charge.** You log in yourself, you choose the tasks, and nothing is submitted
 > without your explicit yes for that one submission. Quizzes and exams are always yours.
-> Your school's rules on AI use apply to you: canvas-killer reads the syllabus, adds the AI-use
-> declaration your school requires, and tells you when your instructor's permission is needed.
-> You are responsible for what you hand in.
+> Your school's rules on AI use apply to you: canvas-killer reads the syllabus and tells you when
+> a declaration of AI use or your instructor's permission is required, and adds the declaration
+> according to your setting (see [AI-use disclosure](#ai-use-disclosure)). You are responsible
+> for what you hand in.
 
 ## Install
 
@@ -51,6 +52,7 @@ Claude drives the `ck` command line. You can run it yourself too
 |---|---|
 | `ck setup --url pucpr` | Saves your Canvas address, checking that it really is Canvas. Optional: `--name`, `--group`, `--naming "{group}_FORMATIVA{n}"`, `--workspace` |
 | `ck setup --ignore "Course name"` | Leaves a course out of the ranking (matches your course nickname or the official name) |
+| `ck setup --ai-disclosure never` | Whether deliverables declare AI use: `auto` (default), `always` or `never`; `--ai-disclosure-text` sets your own wording |
 | `ck login` / `ck logout` | Sign in through a browser window / forget the session and browser profile |
 | `ck sync` | Pulls open assignments from all active courses and prints the ranking |
 | `ck rank [--json] [--all]` | Shows the last ranking (`--all` includes tasks Canvas has locked) |
@@ -73,6 +75,25 @@ label:
 - `draft`: discussion post, drafted for you to post
 - `you`: needs you, with the reason (quiz or exam, external tool, offline work)
 - `locked`: Canvas won't accept it yet
+
+### AI-use disclosure
+
+Some schools require a declaration of AI use inside the work itself, often with a fixed text;
+many don't. You choose what canvas-killer does:
+
+| Setting | Deliverables carry a declaration of AI use |
+|---|---|
+| `auto` (default) | only when your syllabus or school requires one, in their exact wording |
+| `always` | always: your school's wording if there is one, otherwise your own text or a short neutral one |
+| `never` | never; if your syllabus requires one, the task's `NOTES.md` says so in one line |
+
+```
+ck setup --ai-disclosure never
+ck setup --ai-disclosure always --ai-disclosure-text "Prepared with the help of Claude (Anthropic)."
+```
+
+Whatever the setting, when a syllabus says AI use needs your instructor's permission, you are told
+once before you submit.
 
 ## What it won't do
 

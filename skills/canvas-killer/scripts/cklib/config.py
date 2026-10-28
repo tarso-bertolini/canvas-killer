@@ -20,6 +20,15 @@ CACHE_FILE = HOME / "cache" / "tasks.json"
 DEFAULT_WORKSPACE = str(Path.home() / "Documents" / "canvas-killer")
 DEFAULT_NAMING = "{course}_{task}"
 
+# Whether deliverables carry a declaration of AI use. Schools differ: some require
+# one in the work itself, many don't; the student decides how canvas-killer behaves.
+AI_DISCLOSURE_MODES = {
+    "auto": "only when the course or school requires one",
+    "always": "in every deliverable",
+    "never": "never (NOTES.md still mentions it once if the course requires one)",
+}
+DEFAULT_AI_DISCLOSURE = "auto"
+
 
 class ConfigError(Exception):
     pass
@@ -81,6 +90,20 @@ def load_config():
     cfg.setdefault("profile", {})
     cfg.setdefault("workspace", DEFAULT_WORKSPACE)
     return cfg
+
+
+def ai_disclosure(cfg):
+    """The student's AI-use disclosure setting as (mode, custom text or None)."""
+    setting = cfg.get("ai_disclosure") or {}
+    mode = setting.get("mode", DEFAULT_AI_DISCLOSURE)
+    if mode not in AI_DISCLOSURE_MODES:
+        mode = DEFAULT_AI_DISCLOSURE
+    return mode, setting.get("text") or None
+
+
+def describe_ai_disclosure(cfg):
+    mode, text = ai_disclosure(cfg)
+    return "%s, %s%s" % (mode, AI_DISCLOSURE_MODES[mode], "; custom text set" if text else "")
 
 
 def save_config(cfg):
