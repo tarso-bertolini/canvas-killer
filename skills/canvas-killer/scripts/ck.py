@@ -69,7 +69,8 @@ def cmd_setup(args):
     print("AI disclosure:  %s" % config.describe_ai_disclosure(cfg))
     if cfg.get("ignore_courses"):
         print("Ignoring:       courses containing %s" % ", ".join(repr(c) for c in cfg["ignore_courses"]))
-    print("Saved to %s. Next: `ck login`." % config.CONFIG_FILE)
+    signed_in = (config.load_json(config.SESSION_FILE) or {}).get("base_url") == cfg["base_url"]
+    print("Saved to %s. Next: `%s`." % (config.CONFIG_FILE, "ck sync" if signed_in else "ck login"))
 
 
 def cmd_install_browser(args):
